@@ -100,6 +100,7 @@ Test menggunakan [JSONPlaceholder](https://jsonplaceholder.typicode.com) API:
 ### Mobile Testing (Appium + WebdriverIO)
 
 Template test untuk mobile app testing. Update file `tests/mobile/app.test.ts` dengan:
+
 - Path ke APK/IPA file Anda
 - Element selectors sesuai aplikasi Anda
 - Test scenarios sesuai kebutuhan
@@ -109,6 +110,7 @@ Template test untuk mobile app testing. Update file `tests/mobile/app.test.ts` d
 ### Web Testing
 
 Edit `config/wdio.web.conf.ts` untuk:
+
 - Browser capabilities (Chrome, Firefox, Safari, dll)
 - Base URL
 - Timeouts
@@ -117,6 +119,7 @@ Edit `config/wdio.web.conf.ts` untuk:
 ### Mobile Testing
 
 Edit `config/wdio.mobile.conf.ts` untuk:
+
 - Platform (Android/iOS)
 - Device name
 - Platform version
@@ -126,6 +129,7 @@ Edit `config/wdio.mobile.conf.ts` untuk:
 ### API Testing
 
 Edit k6 scripts untuk:
+
 - Test scenarios
 - Virtual users (VUs)
 - Duration
@@ -149,6 +153,7 @@ pnpm run report
 Report HTML akan digenerate di folder `reports/allure-report/`. Buka `reports/allure-report/index.html` untuk melihat hasil test.
 
 **Note:**
+
 - `reports/allure-results/`: Berisi raw data (JSON/XML) hasil test execution.
 - `reports/allure-report/`: Berisi generated HTML report yang human-readable.
 - Folder `reports/` sudah di-exclude di `.gitignore`.
@@ -156,6 +161,7 @@ Report HTML akan digenerate di folder `reports/allure-report/`. Buka `reports/al
 ### k6
 
 k6 menampilkan hasil langsung di terminal dengan metrics:
+
 - HTTP request duration
 - Success/failure rates
 - Throughput
@@ -169,12 +175,12 @@ k6 menampilkan hasil langsung di terminal dengan metrics:
 
 ```typescript
 // tests/web/mytest.test.ts
-describe('My Test Suite', () => {
-    it('should do something', async () => {
-        await browser.url('/my-page');
-        const element = await $('#my-element');
-        await expect(element).toBeDisplayed();
-    });
+describe("My Test Suite", () => {
+  it("should do something", async () => {
+    await browser.url("/my-page");
+    const element = await $("#my-element");
+    await expect(element).toBeDisplayed();
+  });
 });
 ```
 
@@ -184,27 +190,29 @@ k6 tests dapat menggunakan helper functions dari `k6-scripts/helpers.ts`:
 
 ```typescript
 // k6-scripts/my_api_test.ts
-import http from 'k6/http';
-import { check } from 'k6';
-import { expectStatus, expectJsonBody, expectHeader } from './helpers.ts';
+import http from "k6/http";
+import { check } from "k6";
+import { expectStatus, expectJsonBody, expectHeader } from "./helpers.ts";
 
 export default function () {
-    const res = http.get('https://api.example.com/endpoint');
-    
-    check(res, {
-        // Check status code
-        'status is 200': (r) => expectStatus(r, 200),
-        
-        // Check JSON body
-        'has data': (r) => expectJsonBody(r, (data) => data.id !== undefined),
-        
-        // Check headers
-        'has content-type': (r) => expectHeader(r, 'Content-Type', 'application/json'),
-    });
+  const res = http.get("https://api.example.com/endpoint");
+
+  check(res, {
+    // Check status code
+    "status is 200": (r) => expectStatus(r, 200),
+
+    // Check JSON body
+    "has data": (r) => expectJsonBody(r, (data) => data.id !== undefined),
+
+    // Check headers
+    "has content-type": (r) =>
+      expectHeader(r, "Content-Type", "application/json"),
+  });
 }
 ```
 
 **Available Helper Functions:**
+
 - `expectStatus(response, statusCode)` - Check HTTP status
 - `expectJsonBody(response, matcher)` - Validate JSON response body
 - `expectHeader(response, headerName, expectedValue?)` - Check response headers
@@ -229,6 +237,47 @@ export default function () {
 
 - **Module not found**: k6 TypeScript support built-in, tidak perlu install types
 - **Threshold exceeded**: Adjust threshold di options atau tingkatkan performa API
+
+### Browser Use (AI Agent)
+
+- **Model not found**: Pastikan model Ollama sudah di-pull (`ollama pull qwen3-vl`)
+- **Browser not opening**: Pastikan dependencies terinstall (`pip install -r browser-use/requirements.txt`) dan Playwright browsers terinstall (`playwright install`)
+
+## 🤖 Browser Use (AI Agent)
+
+Project ini juga mencakup setup untuk **Browser Use**, sebuah AI agent yang dapat mengontrol browser untuk melakukan task otomatis.
+
+### Setup
+
+1. Masuk ke folder `browser-use`:
+
+   ```bash
+   cd browser-use
+   ```
+
+2. Buat virtual environment dan install dependencies:
+
+   ```bash
+   python3 -m venv venv
+   source venv/bin/activate
+   pip install -r requirements.txt
+   playwright install
+   ```
+
+3. Pastikan Ollama running dengan model yang dibutuhkan:
+   ```bash
+   ollama pull gpt-oss:120b-cloud
+   ```
+
+### Running
+
+```bash
+python main.py
+```
+
+Script akan membuka browser dan otomatis melakukan login ke `dev-app.tagsamurai.com`.
+
+**Note:** Jika menggunakan cloud models, perhatikan rate limits (error 429).
 
 ## 📝 Notes
 
