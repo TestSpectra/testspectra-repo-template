@@ -1,61 +1,75 @@
-# SaaS Automation Test Framework
+# Automation Test Framework
 
 Framework otomasi testing lengkap menggunakan **WebdriverIO** untuk functional testing (Web & Mobile) dan **Grafana k6** untuk API testing (functional & load testing).
 
-## 📋 Prerequisites
+## 🚀 Memulai (Getting Started)
 
-Pastikan tools berikut sudah terinstall:
+Script setup akan secara otomatis memeriksa dan menginstall semua tools yang dibutuhkan, termasuk:
 
-- **Node.js** (v18+)
-- **pnpm** (v8+)
-- **Grafana k6** (untuk API testing)
-- **Java JDK** (untuk mobile testing)
-- **Appium** (untuk mobile testing)
-- **Android Studio/SDK** atau **Xcode** (untuk mobile testing)
+- **Node.js** & **pnpm**
+- **Java JDK** (untuk Mobile)
+- **Android Studio/SDK** (untuk Mobile)
+- **Appium** & Drivers
+- **k6** (untuk API)
+- **Go (Golang)** (untuk dependensi k6)
 
-### Instalasi Tools
+### 🛠️ Setup Cepat (Rekomendasi)
 
-```bash
-# Install pnpm
-npm install -g pnpm
+Jalankan script berikut langsung dari terminal Anda (tidak perlu install Node.js/pnpm terlebih dahulu):
 
-# Install k6 (macOS)
-brew install k6
-
-# Install k6 (Windows dengan Chocolatey)
-choco install k6
-
-# Install Appium
-pnpm install -g appium
-```
-
-## 🚀 Quick Start
-
-### 1. Install Dependencies
+**Mac/Linux:**
 
 ```bash
-cd saas-automation
-pnpm install
+bash scripts/setup.sh
 ```
 
-### 2. Run Tests
+**Windows:**
+
+```powershell
+powershell -ExecutionPolicy Bypass -File scripts/setup.ps1
+```
+
+Perintah ini akan:
+
+1.  Memeriksa/Install **Node.js** & **pnpm**.
+2.  Memeriksa/Install **Java JDK** & **Android SDK**.
+3.  Memeriksa/Install **Appium** secara global.
+4.  Memeriksa/Install **UiAutomator2** driver untuk Android.
+5.  Memeriksa/Install **k6** & **Go**.
+6.  Memeriksa/Install **Appium Inspector** (Mac only).
+7.  Menginstall dependensi project (`pnpm install`).
+
+### 🏃‍♂️ Menjalankan Test
+
+Setelah setup selesai, Anda dapat menjalankan test menggunakan perintah berikut:
 
 ```bash
 # Web Functional Tests (Chrome)
-pnpm run test:web
+pnpm test:web
 
-# Mobile Functional Tests (Appium)
-pnpm run test:mobile
+# Mobile App Tests (Android)
+pnpm test:mobile
 
-# API Functional Tests (k6)
-pnpm run test:api:func
+# API Functional Tests
+pnpm test:api:func
 
-# API Load Tests (k6)
-pnpm run test:api:load
+# API Load Tests
+pnpm test:api:load
 
-# Generate Allure Report (untuk WDIO tests)
-pnpm run report
+# Generate & Open Allure Report
+pnpm report
 ```
+
+### ⚙️ Setup Manual
+
+Jika Anda memilih untuk setup secara manual, pastikan Anda menginstall tools berikut:
+
+1.  **Node.js** (v18+) & **pnpm**.
+2.  **Java JDK** & **Android Studio** (pastikan `ANDROID_HOME` terkonfigurasi).
+3.  **Appium** (`npm i -g appium`) & **UiAutomator2** (`appium driver install uiautomator2`).
+4.  **k6** & **Go**.
+5.  **Appium Inspector**.
+6.  Install dependensi project: `pnpm install`.
 
 ## 📁 Project Structure
 
