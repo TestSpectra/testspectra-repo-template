@@ -112,21 +112,32 @@ function updateCurrentUrl() {
   try {
     const iframeDoc =
       targetFrame.contentDocument || targetFrame.contentWindow.document;
-    const iframeUrl = iframeDoc.location.href;
 
-    // Extract the actual URL from the proxy URL if present
-    if (iframeUrl.includes("/proxy?url=")) {
-      const match = iframeUrl.match(/\/proxy\?url=([^&]+)/);
-      if (match) {
-        const decodedUrl = decodeURIComponent(match[1]);
-        currentUrl.value = decodedUrl;
-        return;
+    // Get the actual location from the iframe
+    const iframePath = iframeDoc.location.pathname;
+    const iframeSearch = iframeDoc.location.search;
+    const iframeHash = iframeDoc.location.hash;
+
+    // Get the base target URL from the initial load
+    const urlParams = new URLSearchParams(window.location.search);
+    const targetBaseUrl = urlParams.get("url");
+
+    if (targetBaseUrl) {
+      // Construct the full URL with the actual domain and current path
+      let fullUrl = targetBaseUrl;
+
+      // Only append path if it's not the proxy path and not just '/'
+      if (iframePath && iframePath !== "/" && !iframePath.includes("/proxy")) {
+        fullUrl += iframePath;
       }
-    }
+      if (iframeSearch && !iframeSearch.includes("url=")) {
+        fullUrl += iframeSearch;
+      }
+      if (iframeHash) {
+        fullUrl += iframeHash;
+      }
 
-    // For direct URLs, just display them
-    if (!iframeUrl.includes("about:blank")) {
-      currentUrl.value = iframeUrl;
+      currentUrl.value = fullUrl;
     }
   } catch (e) {
     // Cross-origin access error - keep current value
