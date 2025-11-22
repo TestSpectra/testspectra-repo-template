@@ -27,10 +27,6 @@ choco install k6
 
 # Install Appium
 pnpm install -g appium
-pnpm install -g appium-doctor
-
-# Verifikasi environment mobile
-appium-doctor
 ```
 
 ## 🚀 Quick Start
