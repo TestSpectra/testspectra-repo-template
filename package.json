@@ -4,6 +4,9 @@
   "description": "",
   "main": "index.js",
   "scripts": {
+    "setup-env": "bash scripts/setup.sh",
+    "setup-env:win": "powershell -ExecutionPolicy Bypass -File scripts/setup.ps1",
+    "inspector": "ts-node scripts/open-inspector.ts",
     "test:web": "wdio run config/wdio.web.conf.ts",
     "test:mobile": "wdio run config/wdio.mobile.conf.ts",
     "test:api:func": "k6 run k6-scripts/functional_api.ts",
