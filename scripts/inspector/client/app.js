@@ -243,6 +243,15 @@ function injectInspectorScript() {
         e.preventDefault();
         e.stopPropagation();
 
+        if (isInspectMode) {
+          const selector = generateSelector(link);
+          currentSelector = selector;
+          selectorOutput.textContent = `$('${selector}')`;
+          log(`Selected: ${selector}`);
+          link.classList.remove("wdio-inspector-hover");
+          return;
+        }
+
         if (isRecording) {
           const selector = generateSelector(link);
           addToRecordedScript(`await $('${selector}').click();`);
