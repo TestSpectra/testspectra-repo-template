@@ -60,7 +60,7 @@ describe("The Internet - Login Page", () => {
     );
   });
 
-  it.only("Login by recorder", async () => {
+  it("Login by recorder", async () => {
     await $("#username").setValue("tomsmith");
     await $("#password").setValue("SuperSecretPassword!");
     await $(".fa").click();

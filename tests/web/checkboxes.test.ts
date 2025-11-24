@@ -1,4 +1,4 @@
-describe.skip("The Internet - Checkboxes", () => {
+describe("The Internet - Checkboxes", () => {
   it("should toggle checkboxes", async () => {
     // Navigate to checkboxes page
     await browser.url("/checkboxes");

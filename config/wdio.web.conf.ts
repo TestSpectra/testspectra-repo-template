@@ -4,7 +4,7 @@ export const config = {
   runner: "local",
   specs: ["/Users/zainkurnia/Documents/automation-test/tests/web/**/*.test.ts"],
   exclude: [],
-  maxInstances: 10,
+  maxInstances: 1,
   capabilities: [
     {
       browserName: "chrome",
