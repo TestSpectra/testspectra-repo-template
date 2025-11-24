@@ -15,7 +15,7 @@ export const config = {
   ],
   logLevel: "info",
   bail: 0,
-  baseUrl: "https://dev-app.tagsamurai.com",
+  baseUrl: "https://the-internet.herokuapp.com",
   waitforTimeout: 10000,
   connectionRetryTimeout: 120000,
   connectionRetryCount: 3,

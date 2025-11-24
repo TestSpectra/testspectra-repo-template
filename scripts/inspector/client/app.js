@@ -4,7 +4,10 @@ const selectorOutput = document.getElementById("selectorOutput");
 const elementInfo = document.getElementById("elementInfo");
 const codeLog = document.getElementById("codeLog");
 const inspectMode = document.getElementById("inspectMode");
+const recordMode = document.getElementById("recordMode");
 const copyBtn = document.getElementById("copyBtn");
+const copyScriptBtn = document.getElementById("copyScriptBtn");
+const recordedCode = document.getElementById("recordedCode");
 const emptyState = document.getElementById("emptyState");
 const infoTag = document.getElementById("infoTag");
 const infoId = document.getElementById("infoId");
@@ -14,8 +17,11 @@ const infoText = document.getElementById("infoText");
 const infoType = document.getElementById("infoType");
 const infoName = document.getElementById("infoName");
 
+const recordedScriptPanel = document.getElementById("recordedScriptPanel");
+
 let currentSelector = "";
 let isInspectMode = true;
+let isRecording = false;
 
 // Initialize with query param if present
 const urlParams = new URLSearchParams(window.location.search);
@@ -29,6 +35,31 @@ if (initialUrl) {
 inspectMode.addEventListener("click", () => {
   isInspectMode = !isInspectMode;
   inspectMode.setAttribute("aria-checked", isInspectMode);
+
+  // If inspect mode is on, turn off recording
+  if (isInspectMode && isRecording) {
+    isRecording = false;
+    recordMode.setAttribute("aria-checked", false);
+    recordedScriptPanel.classList.add("hidden");
+  }
+});
+
+// Toggle record mode
+recordMode.addEventListener("click", () => {
+  isRecording = !isRecording;
+  recordMode.setAttribute("aria-checked", isRecording);
+
+  if (isRecording) {
+    recordedScriptPanel.classList.remove("hidden");
+  } else {
+    recordedScriptPanel.classList.add("hidden");
+  }
+
+  // If recording is on, turn off inspect mode
+  if (isRecording && isInspectMode) {
+    isInspectMode = false;
+    inspectMode.setAttribute("aria-checked", false);
+  }
 });
 
 copyBtn.addEventListener("click", () => {
@@ -37,6 +68,16 @@ copyBtn.addEventListener("click", () => {
     const originalText = copyBtn.innerHTML;
     copyBtn.innerHTML = '<span class="material-icons-outlined">check</span>';
     setTimeout(() => (copyBtn.innerHTML = originalText), 1000);
+  }
+});
+
+copyScriptBtn.addEventListener("click", () => {
+  if (recordedCode.textContent) {
+    navigator.clipboard.writeText(recordedCode.textContent);
+    const originalText = copyScriptBtn.innerHTML;
+    copyScriptBtn.innerHTML =
+      '<span class="material-icons-outlined">check</span>';
+    setTimeout(() => (copyScriptBtn.innerHTML = originalText), 1000);
   }
 });
 
@@ -195,16 +236,56 @@ function injectInspectorScript() {
     });
 
     doc.body.addEventListener("click", (e) => {
-      if (!isInspectMode) return;
-      e.preventDefault();
-      e.stopPropagation();
+      // Handle link navigation for both Inspect and Record modes (and normal browsing)
+      const link = e.target.closest("a");
+      if (link && link.href) {
+        // Prevent default navigation which would go to localhost
+        e.preventDefault();
+        e.stopPropagation();
 
+        if (isRecording) {
+          const selector = generateSelector(link);
+          addToRecordedScript(`await $('${selector}').click();`);
+        }
+
+        // Navigate via proxy
+        const href = link.getAttribute("href");
+        if (href) {
+          // Construct absolute URL based on the current proxied URL
+          const currentProxiedUrl = new URL(currentUrl.value);
+          const targetUrl = new URL(href, currentProxiedUrl.href).href;
+          loadUrl(targetUrl);
+        }
+        return;
+      }
+
+      if (!isInspectMode && !isRecording) return;
+
+      if (isRecording) {
+        const selector = generateSelector(e.target);
+        addToRecordedScript(`await $('${selector}').click();`);
+        return; // Allow default action for non-links
+      }
+
+      if (isInspectMode) {
+        e.preventDefault();
+        e.stopPropagation();
+
+        const selector = generateSelector(e.target);
+        currentSelector = selector;
+        selectorOutput.textContent = `$('${selector}')`;
+        log(`Selected: ${selector}`);
+
+        e.target.classList.remove("wdio-inspector-hover");
+      }
+    });
+
+    doc.body.addEventListener("change", (e) => {
+      if (!isRecording) return;
       const selector = generateSelector(e.target);
-      currentSelector = selector;
-      selectorOutput.textContent = `$('${selector}')`;
-      log(`Selected: ${selector}`);
-
-      e.target.classList.remove("wdio-inspector-hover");
+      // Escape single quotes in value
+      const value = e.target.value.replace(/'/g, "\\'");
+      addToRecordedScript(`await $('${selector}').setValue('${value}');`);
     });
 
     log("Inspector script injected successfully.");
@@ -228,7 +309,9 @@ function generateSelector(el) {
       .split(" ")
       .filter((c) => c !== "wdio-inspector-hover" && c.trim() !== "");
     if (classes.length > 0) {
-      return `.${classes[0]}`;
+      // Escape special characters in class name for CSS selector
+      const escapedClass = CSS.escape(classes[0]);
+      return `.${escapedClass}`;
     }
   }
 
@@ -264,4 +347,9 @@ function log(msg) {
   div.textContent = `> ${msg}`;
   codeLog.appendChild(div);
   codeLog.scrollTop = codeLog.scrollHeight;
+}
+
+function addToRecordedScript(line) {
+  recordedCode.textContent += line + "\n";
+  recordedCode.scrollTop = recordedCode.scrollHeight;
 }

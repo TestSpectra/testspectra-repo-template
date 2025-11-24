@@ -6,7 +6,7 @@ import * as path from "path";
 import * as net from "net";
 
 (async () => {
-  console.log("\n🚀 Launching Custom Web Inspector...");
+  console.log("\n🚀 Launching Web Inspector...");
 
   // 1. Start the Inspector Server if not running
   const port = 8888;
