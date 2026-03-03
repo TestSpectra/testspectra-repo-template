@@ -1,0 +1,6 @@
+{
+  "devDependencies": {
+    "appium-inspector-plugin": "2026.2.1",
+    "appium-uiautomator2-driver": "7.0.0"
+  }
+}

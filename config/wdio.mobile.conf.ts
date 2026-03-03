@@ -9,7 +9,7 @@ export const config: WebdriverIO.Config = {
       "appium:deviceName": "Pixel 8",
       "appium:platformVersion": "14.0",
       "appium:automationName": "UiAutomator2",
-      "appium:appPackage": "id.wangsit.compose.sample",
+      'appium:autoGrantPermissions': true,
       "appium:appWaitActivity": "*",
       "appium:app": "app/sample-release.apk",
       "appium:newCommandTimeout": 240,

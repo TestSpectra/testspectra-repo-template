@@ -9,7 +9,14 @@ export const config = {
     {
       browserName: "chrome",
       "goog:chromeOptions": {
-        args: ["--disable-gpu", "--no-sandbox", "--disable-dev-shm-usage"],
+        args: [
+          "--disable-gpu",
+          "--no-sandbox",
+          "--disable-dev-shm-usage",
+          "--disable-infobars",
+          "--disable-blink-features=AutomationControlled"
+        ],
+        excludeSwitches: ["enable-automation"]
       },
     },
   ],
