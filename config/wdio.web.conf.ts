@@ -2,7 +2,7 @@ import type { Options } from "@wdio/types";
 
 export const config = {
   runner: "local",
-  specs: ["/Users/zainkurnia/Documents/automation-test/tests/web/**/*.test.ts"],
+  specs: ["../tests/web/**/*.test.ts"],
   exclude: [],
   maxInstances: 1,
   capabilities: [
