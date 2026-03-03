@@ -1,12 +1,12 @@
 {
-  "name": "saas-automation",
+  "name": "automation-template",
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
   "scripts": {
     "setup-env": "bash scripts/setup.sh",
     "setup-env:win": "powershell -ExecutionPolicy Bypass -File scripts/setup.ps1",
-    "inspector": "ts-node scripts/open-inspector.ts",
+    "inspector": "ts-node scripts/mobile-inspector.ts",
     "inspector:web": "ts-node scripts/web-inspector.ts",
     "test:web": "wdio run config/wdio.web.conf.ts",
     "test:mobile": "wdio run config/wdio.mobile.conf.ts",

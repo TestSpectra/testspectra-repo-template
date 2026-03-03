@@ -2,12 +2,13 @@ import { config } from "../config/wdio.mobile.conf";
 import { exec, spawn, ChildProcess } from "child_process";
 import * as os from "os";
 import * as net from "net";
+import * as path from "path";
 
 const platform = os.platform();
 
 // Extract capabilities
 const capabilities = config.capabilities;
-let caps = {};
+let caps: Record<string, any> = {};
 
 if (Array.isArray(capabilities) && capabilities.length > 0) {
   caps = capabilities[0];
@@ -15,7 +16,15 @@ if (Array.isArray(capabilities) && capabilities.length > 0) {
   caps = capabilities;
 }
 
+// Convert relative app path to absolute path
+if (caps["appium:app"] && typeof caps["appium:app"] === "string" && !path.isAbsolute(caps["appium:app"])) {
+  caps["appium:app"] = path.resolve(process.cwd(), caps["appium:app"]);
+}
+
+console.log(process.cwd())
+
 const jsonCaps = JSON.stringify(caps, null, 2);
+
 
 // Function to check if port is in use
 const isPortInUse = (port: number): Promise<boolean> => {

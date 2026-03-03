@@ -74,7 +74,7 @@ Jika Anda memilih untuk setup secara manual, pastikan Anda menginstall tools ber
 ## 📁 Project Structure
 
 ```
-saas-automation/
+automation-template/
 ├── config/
 │   ├── wdio.web.conf.ts      # WebdriverIO config untuk Web testing
 │   └── wdio.mobile.conf.ts   # WebdriverIO config untuk Mobile testing
@@ -95,10 +95,9 @@ saas-automation/
 
 ### Web Testing (WebdriverIO)
 
-Test menggunakan demo website [the-internet.herokuapp.com](https://the-internet.herokuapp.com):
+Test menggunakan dev-app.tagsamurai.com:
 
 - **Login Test**: Validasi login dengan kredensial valid dan invalid
-- **Checkbox Test**: Interaksi dengan checkbox elements
 
 ### API Testing (k6)
 

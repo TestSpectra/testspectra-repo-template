@@ -1,6 +1,6 @@
-import http from 'k6/http';
 import { check, sleep } from 'k6';
-import { json, expectStatus, expectJsonBody, expectJsonResponse } from './helpers.ts';
+import http from 'k6/http';
+import { expectJsonBody, expectStatus } from './helpers.ts';
 
 // Test configuration
 export const options = {

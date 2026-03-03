@@ -1,20 +1,17 @@
 export const config: WebdriverIO.Config = {
   runner: "local",
-  specs: [
-    "/Users/zainkurnia/Documents/automation-test/tests/mobile/**/*.test.ts",
-  ],
+  specs: ["../tests/mobile/**/*.test.ts"],
   exclude: [],
   maxInstances: 1,
   capabilities: [
     {
       platformName: "Android",
-      "appium:deviceName": "Pixel 7a",
+      "appium:deviceName": "Pixel 8",
       "appium:platformVersion": "14.0",
       "appium:automationName": "UiAutomator2",
       "appium:appPackage": "id.wangsit.compose.sample",
       "appium:appWaitActivity": "*",
-      "appium:app":
-        "/Users/zainkurnia/Documents/automation-test/app/sample-release.apk",
+      "appium:app": "app/sample-release.apk",
       "appium:newCommandTimeout": 240,
     },
   ],
