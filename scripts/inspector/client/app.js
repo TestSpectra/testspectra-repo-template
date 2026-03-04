@@ -1,3 +1,6 @@
+// ============================================================
+// DOM References
+// ============================================================
 const currentUrl = document.getElementById("currentUrl");
 const targetFrame = document.getElementById("targetFrame");
 const selectorOutput = document.getElementById("selectorOutput");
@@ -16,27 +19,44 @@ const infoClass = document.getElementById("infoClass");
 const infoText = document.getElementById("infoText");
 const infoType = document.getElementById("infoType");
 const infoName = document.getElementById("infoName");
-
 const recordedScriptPanel = document.getElementById("recordedScriptPanel");
 
+// ============================================================
+// State
+// ============================================================
 let currentSelector = "";
 let isInspectMode = true;
 let isRecording = false;
 
-// Initialize with query param if present
-const urlParams = new URLSearchParams(window.location.search);
-const initialUrl = urlParams.get("url");
-if (initialUrl) {
-  currentUrl.value = initialUrl;
-  loadUrl(initialUrl);
+// ============================================================
+// Initialization
+// ============================================================
+// The MITM proxy injects __INSPECTOR_TARGET__ into the page.
+// If it's present, show the target URL and hide the empty state
+// (iframe already loads "/" which the proxy serves as the real target).
+const inspectorTarget = window.__INSPECTOR_TARGET__;
+if (inspectorTarget) {
+  currentUrl.value = inspectorTarget;
+  emptyState.classList.add("hidden");
+  targetFrame.classList.add("loaded");
+  log(`Inspector connected to: ${inspectorTarget}`);
+} else {
+  // Fallback: if loaded outside of MITM proxy context (e.g. direct /proxy?url= mode)
+  const urlParams = new URLSearchParams(window.location.search);
+  const initialUrl = urlParams.get("url");
+  if (initialUrl) {
+    currentUrl.value = initialUrl;
+    loadUrl(initialUrl);
+  }
 }
 
-// Toggle inspect mode
+// ============================================================
+// Toggle Controls
+// ============================================================
 inspectMode.addEventListener("click", () => {
   isInspectMode = !isInspectMode;
   inspectMode.setAttribute("aria-checked", isInspectMode);
 
-  // If inspect mode is on, turn off recording
   if (isInspectMode && isRecording) {
     isRecording = false;
     recordMode.setAttribute("aria-checked", false);
@@ -44,7 +64,6 @@ inspectMode.addEventListener("click", () => {
   }
 });
 
-// Toggle record mode
 recordMode.addEventListener("click", () => {
   isRecording = !isRecording;
   recordMode.setAttribute("aria-checked", isRecording);
@@ -55,13 +74,15 @@ recordMode.addEventListener("click", () => {
     recordedScriptPanel.classList.add("hidden");
   }
 
-  // If recording is on, turn off inspect mode
   if (isRecording && isInspectMode) {
     isInspectMode = false;
     inspectMode.setAttribute("aria-checked", false);
   }
 });
 
+// ============================================================
+// Copy Buttons
+// ============================================================
 copyBtn.addEventListener("click", () => {
   if (currentSelector) {
     navigator.clipboard.writeText(currentSelector);
@@ -81,7 +102,9 @@ copyScriptBtn.addEventListener("click", () => {
   }
 });
 
-// Sidebar resize functionality
+// ============================================================
+// Sidebar Resize
+// ============================================================
 const resizeHandle = document.querySelector(".resize-handle");
 const sidebar = document.querySelector(".sidebar");
 let isResizing = false;
@@ -94,12 +117,11 @@ resizeHandle.addEventListener("mousedown", (e) => {
 
 document.addEventListener("mousemove", (e) => {
   if (!isResizing) return;
-
   const newWidth = e.clientX;
   if (newWidth >= 250 && newWidth <= 600) {
     document.documentElement.style.setProperty(
       "--sidebar-width",
-      `${newWidth}px`
+      `${newWidth}px`,
     );
   }
 });
@@ -112,17 +134,34 @@ document.addEventListener("mouseup", () => {
   }
 });
 
+// ============================================================
+// URL Loading
+// ============================================================
 function loadUrl(url) {
   if (!url.startsWith("http")) {
     url = "https://" + url;
   }
   emptyState.classList.add("hidden");
   targetFrame.classList.add("loaded");
-  targetFrame.src = `/proxy?url=${encodeURIComponent(url)}`;
+
+  // Under MITM proxy: if on the same origin, just navigate the iframe
+  // Under legacy /proxy?url= mode: use the proxy endpoint
+  if (inspectorTarget) {
+    // MITM mode: navigate iframe to the new path directly (same origin via proxy)
+    const targetUrl = new URL(url);
+    targetFrame.src = targetUrl.pathname + targetUrl.search + targetUrl.hash;
+  } else {
+    // Legacy mode
+    targetFrame.src = `/proxy?url=${encodeURIComponent(url)}`;
+  }
+
   currentUrl.value = url;
   log(`Loading: ${url}`);
 }
 
+// ============================================================
+// Iframe Load Handler
+// ============================================================
 targetFrame.onload = () => {
   log("Target loaded. Injecting inspector script...");
   injectInspectorScript();
@@ -130,7 +169,9 @@ targetFrame.onload = () => {
   startUrlMonitoring();
 };
 
-// Monitor iframe URL changes for SPA navigation
+// ============================================================
+// URL Monitoring (SPA navigation tracking)
+// ============================================================
 let lastIframeUrl = "";
 function startUrlMonitoring() {
   setInterval(() => {
@@ -144,7 +185,7 @@ function startUrlMonitoring() {
         updateCurrentUrl();
       }
     } catch (e) {
-      // Cross-origin access error - ignore
+      // Cross-origin access error — ignore
     }
   }, 500);
 }
@@ -154,37 +195,24 @@ function updateCurrentUrl() {
     const iframeDoc =
       targetFrame.contentDocument || targetFrame.contentWindow.document;
 
-    // Get the actual location from the iframe
-    const iframePath = iframeDoc.location.pathname;
-    const iframeSearch = iframeDoc.location.search;
-    const iframeHash = iframeDoc.location.hash;
-
-    // Get the base target URL from the initial load
-    const urlParams = new URLSearchParams(window.location.search);
-    const targetBaseUrl = urlParams.get("url");
-
-    if (targetBaseUrl) {
-      // Construct the full URL with the actual domain and current path
-      let fullUrl = targetBaseUrl;
-
-      // Only append path if it's not the proxy path and not just '/'
-      if (iframePath && iframePath !== "/" && !iframePath.includes("/proxy")) {
-        fullUrl += iframePath;
-      }
-      if (iframeSearch && !iframeSearch.includes("url=")) {
-        fullUrl += iframeSearch;
-      }
-      if (iframeHash) {
-        fullUrl += iframeHash;
-      }
-
-      currentUrl.value = fullUrl;
+    // Under MITM proxy: the iframe is on the same origin as the real site.
+    // We can read its full URL directly.
+    const iframeFullUrl = iframeDoc.location.href;
+    if (iframeFullUrl && !iframeFullUrl.includes("about:blank")) {
+      currentUrl.value = iframeFullUrl;
+      return;
     }
   } catch (e) {
-    // Cross-origin access error - keep current value
+    // Cross-origin — keep current value, or build URL from target base
+    if (inspectorTarget) {
+      currentUrl.value = inspectorTarget;
+    }
   }
 }
 
+// ============================================================
+// Inspector Script Injection
+// ============================================================
 function injectInspectorScript() {
   try {
     const doc = targetFrame.contentDocument;
@@ -192,12 +220,12 @@ function injectInspectorScript() {
 
     if (!doc) {
       log(
-        "Error: Cannot access iframe content. Ensure --disable-web-security is active."
+        "Error: Cannot access iframe content. Ensure --disable-web-security is active.",
       );
       return;
     }
 
-    // Inject Styles for highlighting
+    // Inject highlight styles
     const style = doc.createElement("style");
     style.textContent = `
             .wdio-inspector-hover {
@@ -208,7 +236,7 @@ function injectInspectorScript() {
         `;
     doc.head.appendChild(style);
 
-    // Event Listeners
+    // Mouseover: highlight + show element info
     doc.body.addEventListener("mouseover", (e) => {
       if (!isInspectMode) return;
       e.stopPropagation();
@@ -230,16 +258,16 @@ function injectInspectorScript() {
       updateInfo(info);
     });
 
+    // Mouseout: remove highlight
     doc.body.addEventListener("mouseout", (e) => {
       if (!isInspectMode) return;
       e.target.classList.remove("wdio-inspector-hover");
     });
 
+    // Click: select element or record
     doc.body.addEventListener("click", (e) => {
-      // Handle link navigation for both Inspect and Record modes (and normal browsing)
       const link = e.target.closest("a");
       if (link && link.href) {
-        // Prevent default navigation which would go to localhost
         e.preventDefault();
         e.stopPropagation();
 
@@ -257,10 +285,9 @@ function injectInspectorScript() {
           addToRecordedScript(`await $('${selector}').click();`);
         }
 
-        // Navigate via proxy
+        // Navigate via MITM proxy — just follow the href normally
         const href = link.getAttribute("href");
         if (href) {
-          // Construct absolute URL based on the current proxied URL
           const currentProxiedUrl = new URL(currentUrl.value);
           const targetUrl = new URL(href, currentProxiedUrl.href).href;
           loadUrl(targetUrl);
@@ -273,7 +300,7 @@ function injectInspectorScript() {
       if (isRecording) {
         const selector = generateSelector(e.target);
         addToRecordedScript(`await $('${selector}').click();`);
-        return; // Allow default action for non-links
+        return;
       }
 
       if (isInspectMode) {
@@ -284,15 +311,14 @@ function injectInspectorScript() {
         currentSelector = selector;
         selectorOutput.textContent = `$('${selector}')`;
         log(`Selected: ${selector}`);
-
         e.target.classList.remove("wdio-inspector-hover");
       }
     });
 
+    // Change: record input values
     doc.body.addEventListener("change", (e) => {
       if (!isRecording) return;
       const selector = generateSelector(e.target);
-      // Escape single quotes in value
       const value = e.target.value.replace(/'/g, "\\'");
       addToRecordedScript(`await $('${selector}').setValue('${value}');`);
     });
@@ -304,48 +330,51 @@ function injectInspectorScript() {
   }
 }
 
+// ============================================================
+// Selector Generation
+// ============================================================
 function generateSelector(el) {
-  // 1. Try data-test-id first (highest priority)
+  // 1. data-test-id (highest priority)
   const testId = el.getAttribute("data-test-id");
   if (testId) return `~${testId}`;
 
-  // 2. Try id
+  // 2. id
   if (el.id) return `#${el.id}`;
 
-  // 3. Try class
+  // 3. className
   if (el.className && typeof el.className === "string") {
     const classes = el.className
       .split(" ")
       .filter((c) => c !== "wdio-inspector-hover" && c.trim() !== "");
     if (classes.length > 0) {
-      // Escape special characters in class name for CSS selector
       const escapedClass = CSS.escape(classes[0]);
       return `.${escapedClass}`;
     }
   }
 
-  // 4. Fallback to tag + text for buttons/links
+  // 4. tag + text for interactive elements
   if (el.tagName === "BUTTON" || el.tagName === "A") {
     const text = el.innerText?.trim();
     if (text) return `${el.tagName.toLowerCase()}=${text}`;
   }
 
-  // 5. Last resort: just the tag name
+  // 5. fallback: tag name
   return el.tagName.toLowerCase();
 }
 
+// ============================================================
+// UI Helpers
+// ============================================================
 function updateInfo(info) {
   infoTag.textContent = `<${info.tagName}>`;
   infoId.textContent = info.id || "-";
   infoTestId.textContent = info.testId || "-";
 
-  // Handle className which might be an object or string
   const classText =
     typeof info.className === "string"
       ? info.className.replace("wdio-inspector-hover", "").trim() || "-"
       : "-";
   document.getElementById("infoClass").textContent = classText;
-
   document.getElementById("infoText").textContent = info.text || "-";
   document.getElementById("infoType").textContent = info.type || "-";
   document.getElementById("infoName").textContent = info.name || "-";

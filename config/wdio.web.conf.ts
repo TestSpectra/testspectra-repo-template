@@ -14,15 +14,15 @@ export const config = {
           "--no-sandbox",
           "--disable-dev-shm-usage",
           "--disable-infobars",
-          "--disable-blink-features=AutomationControlled"
+          "--disable-blink-features=AutomationControlled",
         ],
-        excludeSwitches: ["enable-automation"]
+        excludeSwitches: ["enable-automation"],
       },
     },
   ],
   logLevel: "info",
   bail: 0,
-  baseUrl: "https://the-internet.herokuapp.com",
+  baseUrl: "https://dev-app.tagsamurai.com",
   waitforTimeout: 10000,
   connectionRetryTimeout: 120000,
   connectionRetryCount: 3,
