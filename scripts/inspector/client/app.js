@@ -144,14 +144,12 @@ function loadUrl(url) {
   emptyState.classList.add("hidden");
   targetFrame.classList.add("loaded");
 
-  // Under MITM proxy: if on the same origin, just navigate the iframe
-  // Under legacy /proxy?url= mode: use the proxy endpoint
   if (inspectorTarget) {
-    // MITM mode: navigate iframe to the new path directly (same origin via proxy)
-    const targetUrl = new URL(url);
-    targetFrame.src = targetUrl.pathname + targetUrl.search + targetUrl.hash;
+    // MITM mode: set the FULL URL — the proxy transparently handles any domain,
+    // so external URLs (e.g. dev-fam.tagsamurai.com) work exactly like internal ones.
+    targetFrame.src = url;
   } else {
-    // Legacy mode
+    // Legacy /proxy?url= mode
     targetFrame.src = `/proxy?url=${encodeURIComponent(url)}`;
   }
 
@@ -267,11 +265,12 @@ function injectInspectorScript() {
     // Click: select element or record
     doc.body.addEventListener("click", (e) => {
       const link = e.target.closest("a");
-      if (link && link.href) {
-        e.preventDefault();
-        e.stopPropagation();
 
+      if (link && link.href) {
+        // INSPECT MODE: show selector, block navigation
         if (isInspectMode) {
+          e.preventDefault();
+          e.stopPropagation();
           const selector = generateSelector(link);
           currentSelector = selector;
           selectorOutput.textContent = `$('${selector}')`;
@@ -280,21 +279,21 @@ function injectInspectorScript() {
           return;
         }
 
+        // RECORD MODE: record the click, then let browser navigate naturally.
+        // In MITM mode the proxy handles all domains transparently — no need to
+        // intercept the navigation; the URL monitoring interval will pick it up.
         if (isRecording) {
           const selector = generateSelector(link);
           addToRecordedScript(`await $('${selector}').click();`);
+          // Do NOT preventDefault — let the browser follow the link normally
+          return;
         }
 
-        // Navigate via MITM proxy — just follow the href normally
-        const href = link.getAttribute("href");
-        if (href) {
-          const currentProxiedUrl = new URL(currentUrl.value);
-          const targetUrl = new URL(href, currentProxiedUrl.href).href;
-          loadUrl(targetUrl);
-        }
+        // NORMAL MODE: let the browser navigate naturally (proxy handles all domains)
         return;
       }
 
+      // Non-link clicks
       if (!isInspectMode && !isRecording) return;
 
       if (isRecording) {
@@ -306,7 +305,6 @@ function injectInspectorScript() {
       if (isInspectMode) {
         e.preventDefault();
         e.stopPropagation();
-
         const selector = generateSelector(e.target);
         currentSelector = selector;
         selectorOutput.textContent = `$('${selector}')`;
