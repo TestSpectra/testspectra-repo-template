@@ -10,7 +10,5 @@ describe("Tagsamurai - Login", () => {
         await browser.pause(1000)
 
         await browser.refresh()
-
-        await browser.pause(100000)
     });
 });
