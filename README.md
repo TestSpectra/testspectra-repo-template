@@ -26,7 +26,8 @@ bash scripts/setup.sh
 **Windows:**
 
 ```powershell
-powershell -ExecutionPolicy Bypass -File scripts/setup.ps1
+Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser
+powershell -File scripts/setup.ps1
 ```
 
 Perintah ini akan:
